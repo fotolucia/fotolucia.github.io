@@ -1,6 +1,7 @@
 ---
 titulo: "El Instagram victoriano: la historia oculta de las cartes de visite"
 fecha: "2026-09-29T10:00:00.000Z"
+tituloEn: "Victorian Instagram: The Hidden History of Letters to Visit"
 portada: "/uploads/blog/ngc-39161-thumbnail-frame-mumj78c2150.jpg"
 orden: 4
 ---
