@@ -74,7 +74,6 @@ const htmlEn = cuerpoEn ? await marked.parse(cuerpoEn) : "";
   /* Solo se justifican los párrafos que se marquen como tal desde el botón del editor */
   .texto :global(.justificado) {
     text-align: justify;
-    hyphens: auto;
   }
 
   /* Si hay texto en inglés escrito, se cambia al pulsar la bandera; si no, se queda en español */
