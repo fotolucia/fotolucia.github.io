@@ -141,12 +141,6 @@ const esFotografias = sinBarraFinal(ruta) === sinBarraFinal(url("/")) || activo(
         else location.href = logo.href;
       });
 
-      // Cabecera fija: línea sutil debajo solo cuando hay algo de contenido pasando por detrás
-      const cabecera = document.querySelector(".cabecera")!;
-      const marcarScroll = () => cabecera.classList.toggle("con-sombra", scrollY > 4);
-      marcarScroll();
-      addEventListener("scroll", marcarScroll, { passive: true });
-
       // Traducción al inglés (bandera). Traduce los textos fijos de la web y los nombres en
       // inglés puestos en el panel (categorías). El resto del contenido (blog, descripciones,
       // pies de foto) sigue en español. Se recuerda mientras la pestaña esté abierta.

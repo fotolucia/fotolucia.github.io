@@ -123,6 +123,36 @@ async function prepararImagen(archivo: File) {
   return { vista, base64: vista.split(",")[1] };
 }
 
+// Fotos insertadas dentro del texto de una entrada (con el botón de imagen del editor, o
+// arrastrándolas): se guardan aquí hasta que se pulse «Guardar cambios», momento en el que la
+// URL provisional (la vista previa) se cambia por la ruta final dentro del texto.
+let imagenesPendientesTexto: { dataUrl: string; ruta: string; base64: string }[] = [];
+
+async function subirImagenEditor(archivo: File, onExito: (url: string) => void, onError: (msg: string) => void) {
+  try {
+    const nueva = await prepararImagen(archivo);
+    const nombre = `${slugify(archivo.name.replace(/\.[^.]+$/, "")) || "foto"}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}.jpg`;
+    const ruta = `/uploads/blog/${nombre}`;
+    imagenesPendientesTexto.push({ dataUrl: nueva.vista, ruta, base64: nueva.base64 });
+    onExito(nueva.vista); // se ve al momento; se cambia por la ruta final al guardar
+  } catch {
+    onError("No se ha podido leer esa imagen.");
+  }
+}
+
+// Cambia, en el texto ya escrito, las vistas previas provisionales por su ruta final, y añade
+// a «cambios» solo las fotos que de verdad se han quedado en el texto (si se insertó una y
+// luego se borró, no se llega a subir)
+function resolverImagenesEditor(texto: string, cambios: Cambio[]): string {
+  let resultado = texto;
+  for (const img of imagenesPendientesTexto) {
+    if (!resultado.includes(img.dataUrl)) continue;
+    resultado = resultado.split(img.dataUrl).join(img.ruta);
+    if (!cambios.some((c) => c.ruta === rutaRepo(img.ruta))) cambios.push({ ruta: rutaRepo(img.ruta), base64: img.base64 });
+  }
+  return resultado;
+}
+
 const jsonCategoria = (c: Categoria["datos"]) => textoABase64(JSON.stringify(c, null, 2) + "\n");
 
 // Lectura y escritura de los archivos .md del blog: unas líneas de datos («frontmatter»,
@@ -907,12 +937,32 @@ const TOOLBAR_ENTRADA = [
   "guide",
 ] as const;
 
+// uploadImage hace que el botón de imagen (y arrastrar o pegar una foto) suba el archivo de
+// verdad, en vez de solo escribir un hueco de texto para pegar una URL
 const entradaMde = new EasyMDE({
   element: $<HTMLTextAreaElement>("#entrada-cuerpo"),
   spellChecker: false,
   status: ["lines", "words"],
   placeholder: "Escribe aquí la entrada…",
   toolbar: [...TOOLBAR_ENTRADA],
+  uploadImage: true,
+  imageAccept: "image/png, image/jpeg, image/gif, image/webp",
+  imageMaxSize: 20 * 1024 * 1024,
+  imageUploadFunction: subirImagenEditor,
+  imageTexts: {
+    sbInit: "Arrastra una foto o pulsa el icono de imagen para insertarla",
+    sbOnDragEnter: "Suelta la foto para subirla",
+    sbOnDrop: "Subiendo foto…",
+    sbProgress: "Subiendo #images_names#: #percent#%",
+    sbOnUploaded: "Subida",
+    sizeUnits: " B, KB, MB",
+  },
+  errorMessages: {
+    noFileGiven: "No se ha elegido ningún archivo.",
+    typeNotAllowed: "Ese tipo de archivo no está permitido.",
+    fileTooLarge: "La foto pesa demasiado (máximo #maxSize#).",
+    importError: "Algo ha fallado al subir la foto.",
+  },
 });
 
 const entradaMdeEn = new EasyMDE({
@@ -921,6 +971,24 @@ const entradaMdeEn = new EasyMDE({
   status: ["lines", "words"],
   placeholder: "Déjalo en blanco para que, en inglés, se siga viendo el texto en español…",
   toolbar: [...TOOLBAR_ENTRADA],
+  uploadImage: true,
+  imageAccept: "image/png, image/jpeg, image/gif, image/webp",
+  imageMaxSize: 20 * 1024 * 1024,
+  imageUploadFunction: subirImagenEditor,
+  imageTexts: {
+    sbInit: "Arrastra una foto o pulsa el icono de imagen para insertarla",
+    sbOnDragEnter: "Suelta la foto para subirla",
+    sbOnDrop: "Subiendo foto…",
+    sbProgress: "Subiendo #images_names#: #percent#%",
+    sbOnUploaded: "Subida",
+    sizeUnits: " B, KB, MB",
+  },
+  errorMessages: {
+    noFileGiven: "No se ha elegido ningún archivo.",
+    typeNotAllowed: "Ese tipo de archivo no está permitido.",
+    fileTooLarge: "La foto pesa demasiado (máximo #maxSize#).",
+    importError: "Algo ha fallado al subir la foto.",
+  },
 });
 
 function pintarPortadaEntrada() {
@@ -958,6 +1026,7 @@ $("#entrada-quitar-portada").addEventListener("click", () => {
 // Modificar
 function abrirEdicionEntrada(e: Entrada) {
   editandoEntrada = { original: e, portada: e.datos.portada ?? "" };
+  imagenesPendientesTexto = [];
   $("#entrada-titulo-visor").textContent = e.datos.titulo;
   $<HTMLInputElement>("#entrada-titulo").value = e.datos.titulo;
   $<HTMLInputElement>("#entrada-titulo-en").value = e.datos.tituloEn ?? "";
@@ -1041,6 +1110,9 @@ $("#entrada-guardar").addEventListener("click", async () => {
     const usada = entradas.some((e) => e.slug !== original.slug && e.datos.portada === portadaAnterior);
     if (!usada) cambios.push({ ruta: rutaRepo(portadaAnterior), base64: null });
   }
+  // Las fotos puestas dentro del texto con el editor: se cambia su vista previa por la ruta final
+  datos.cuerpo = resolverImagenesEditor(datos.cuerpo, cambios);
+  if (datos.cuerpoEn) datos.cuerpoEn = resolverImagenesEditor(datos.cuerpoEn, cambios);
   cambios.push({ ruta: `${DIR_BLOG}/${slug}.md`, base64: textoABase64(serializarEntrada(datos)) });
   if (slug !== original.slug) cambios.push({ ruta: `${DIR_BLOG}/${original.slug}.md`, base64: null });
 

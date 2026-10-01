@@ -893,6 +893,15 @@ import "easymde/dist/easymde.min.css";
     color: var(--suave);
   }
 
+  /* El editor mete estos textos en inglés por defecto; aquí se traducen */
+  .EasyMDEContainer .editor-statusbar .lines:before {
+    content: "líneas: ";
+  }
+
+  .EasyMDEContainer .editor-statusbar .words:before {
+    content: "palabras: ";
+  }
+
   /* Diálogos */
   .dialogo {
     border: 0;
