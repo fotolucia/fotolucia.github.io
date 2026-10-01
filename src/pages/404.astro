@@ -1,0 +1,36 @@
+---
+import Base from "../layouts/Base.astro";
+import { url } from "../site";
+---
+
+<Base titulo="Página no encontrada" noindex>
+  <section class="intro error-404">
+    <span class="etiqueta" data-en="Error 404">Error 404</span>
+    <h1 data-en="Page not found">Página no encontrada</h1>
+    <p data-en="The page you're looking for doesn't exist, or may have moved.">
+      La página que buscas no existe, o puede que se haya movido.
+    </p>
+    <a href={url("/")} class="enlace-flecha" data-en="← Back to Photography">← Volver a Fotografías</a>
+  </section>
+</Base>
+
+<style>
+  .error-404 {
+    padding: 96px 0;
+    text-align: center;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .error-404 h1 {
+    margin: 10px 0 16px;
+  }
+
+  .error-404 p {
+    margin-bottom: 28px;
+  }
+
+  .error-404 .enlace-flecha {
+    display: inline-block;
+  }
+</style>

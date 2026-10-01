@@ -56,6 +56,8 @@ const esFotografias = sinBarraFinal(ruta) === sinBarraFinal(url("/")) || activo(
     </script>
   </head>
   <body>
+    <a href="#contenido" class="saltar" data-en="Skip to content">Saltar al contenido</a>
+
     <header class="cabecera">
       <a href={url("/")} class="logo">
         {SITE.nombre}<span>{SITE.subtitulo}</span>
@@ -93,7 +95,7 @@ const esFotografias = sinBarraFinal(ruta) === sinBarraFinal(url("/")) || activo(
       </nav>
     </header>
 
-    <main>
+    <main id="contenido">
       <slot />
     </main>
 

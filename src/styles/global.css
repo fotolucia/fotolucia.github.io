@@ -75,6 +75,45 @@ img {
   height: auto;
 }
 
+/* Foco visible al navegar con el teclado (no al hacer clic con el ratón) */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--texto);
+  outline-offset: 3px;
+}
+
+/* Respeta a quien prefiere menos movimiento en el sistema */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Enlace "saltar al contenido": invisible hasta que se navega hasta él con el tabulador */
+.saltar {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 50;
+  background: var(--texto);
+  color: var(--fondo);
+  padding: 10px 18px;
+  border-radius: 2px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: top 0.2s;
+}
+
+.saltar:focus {
+  top: 16px;
+}
+
 a {
   color: inherit;
 }
