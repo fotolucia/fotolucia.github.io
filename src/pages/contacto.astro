@@ -89,7 +89,7 @@ import { SITE } from "../site";
 <style>
   .disposicion {
     display: grid;
-    grid-template-columns: minmax(0, 520px) 220px;
+    grid-template-columns: minmax(0, 520px) 260px;
     gap: 64px;
     align-items: start;
   }
@@ -124,9 +124,15 @@ import { SITE } from "../site";
     text-decoration: none;
   }
 
+  /* Sin esto, un correo largo (una sola palabra, sin espacios) encoge el icono hasta hacerlo desaparecer */
+  .enlace-redes svg {
+    flex-shrink: 0;
+  }
+
   .enlace-redes span {
     display: flex;
     flex-direction: column;
+    min-width: 0;
   }
 
   .nombre-red {
@@ -138,6 +144,7 @@ import { SITE } from "../site";
 
   .dato-red {
     font-size: 1rem;
+    overflow-wrap: anywhere;
     transition: text-decoration-color 0.2s;
   }
 
