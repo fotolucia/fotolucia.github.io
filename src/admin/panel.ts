@@ -125,16 +125,24 @@ async function prepararImagen(archivo: File) {
 
 // Fotos insertadas dentro del texto de una entrada (con el botón de imagen del editor, o
 // arrastrándolas): se guardan aquí hasta que se pulse «Guardar cambios», momento en el que la
-// URL provisional (la vista previa) se cambia por la ruta final dentro del texto.
-let imagenesPendientesTexto: { dataUrl: string; ruta: string; base64: string }[] = [];
+// URL provisional (la vista previa) se cambia por la ruta final dentro del texto. Esa URL
+// provisional es un "blob:" (una referencia corta a la foto en la memoria del navegador, no la
+// foto en sí) para que el texto del editor no se llene de miles de caracteres sin sentido.
+let imagenesPendientesTexto: { urlProvisional: string; ruta: string; base64: string }[] = [];
+
+function limpiarImagenesPendientesTexto() {
+  for (const img of imagenesPendientesTexto) URL.revokeObjectURL(img.urlProvisional);
+  imagenesPendientesTexto = [];
+}
 
 async function subirImagenEditor(archivo: File, onExito: (url: string) => void, onError: (msg: string) => void) {
   try {
     const nueva = await prepararImagen(archivo);
     const nombre = `${slugify(archivo.name.replace(/\.[^.]+$/, "")) || "foto"}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}.jpg`;
     const ruta = `/uploads/blog/${nombre}`;
-    imagenesPendientesTexto.push({ dataUrl: nueva.vista, ruta, base64: nueva.base64 });
-    onExito(nueva.vista); // se ve al momento; se cambia por la ruta final al guardar
+    const urlProvisional = URL.createObjectURL(archivo);
+    imagenesPendientesTexto.push({ urlProvisional, ruta, base64: nueva.base64 });
+    onExito(urlProvisional); // se ve al momento; se cambia por la ruta final al guardar
   } catch {
     onError("No se ha podido leer esa imagen.");
   }
@@ -146,8 +154,8 @@ async function subirImagenEditor(archivo: File, onExito: (url: string) => void, 
 function resolverImagenesEditor(texto: string, cambios: Cambio[]): string {
   let resultado = texto;
   for (const img of imagenesPendientesTexto) {
-    if (!resultado.includes(img.dataUrl)) continue;
-    resultado = resultado.split(img.dataUrl).join(img.ruta);
+    if (!resultado.includes(img.urlProvisional)) continue;
+    resultado = resultado.split(img.urlProvisional).join(img.ruta);
     if (!cambios.some((c) => c.ruta === rutaRepo(img.ruta))) cambios.push({ ruta: rutaRepo(img.ruta), base64: img.base64 });
   }
   return resultado;
@@ -920,21 +928,70 @@ async function eliminarEntrada(e: Entrada) {
 }
 
 // El editor de texto (una sola vez; cada entrada solo cambia lo que contiene)
+//
+// Los botones de la barra del editor (EasyMDE) usan por defecto iconos de Font Awesome, una
+// librería que esta web no carga (para no añadir peso de más); sin ella, los botones se ven en
+// blanco, sin icono. Por eso aquí se definen con icono y texto en español propios: así se ven
+// bien y además quien escribe sabe exactamente qué hace cada uno sin tener que adivinarlo.
+const ICONO_NEGRITA = `<span style="font-weight:700;font-size:15px">N</span>`;
+const ICONO_CURSIVA = `<span style="font-style:italic;font-size:15px">C</span>`;
+const ICONO_CITA = `<span style="font-family:var(--serif);font-size:20px;line-height:1">❝</span>`;
+const ICONO_LISTA = `<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="4" cy="6" r="1.4" fill="currentColor"/><circle cx="4" cy="12" r="1.4" fill="currentColor"/><circle cx="4" cy="18" r="1.4" fill="currentColor"/><line x1="9" y1="6" x2="20" y2="6" stroke="currentColor" stroke-width="1.6"/><line x1="9" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.6"/><line x1="9" y1="18" x2="20" y2="18" stroke="currentColor" stroke-width="1.6"/></svg>`;
+const ICONO_LISTA_NUM = `<svg viewBox="0 0 24 24" width="16" height="16"><text x="0.5" y="8.5" font-size="7" fill="currentColor">1</text><text x="0.5" y="14.5" font-size="7" fill="currentColor">2</text><text x="0.5" y="20.5" font-size="7" fill="currentColor">3</text><line x1="9" y1="6" x2="20" y2="6" stroke="currentColor" stroke-width="1.6"/><line x1="9" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.6"/><line x1="9" y1="18" x2="20" y2="18" stroke="currentColor" stroke-width="1.6"/></svg>`;
+const ICONO_ENLACE = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 15l6-6"/><path d="M8 17l-2 2a3.5 3.5 0 0 1-5-5l2-2"/><path d="M16 7l2-2a3.5 3.5 0 0 1 5 5l-2 2"/></svg>`;
+const ICONO_FOTO = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="1.5"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5.5-5.5L8 18"/></svg>`;
+const ICONO_VER = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const ICONO_AYUDA = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7" stroke-linecap="round"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></svg>`;
+
+// Nota: a EasyMDE hay que darle siempre un className que no esté vacío (si no, falla al crear
+// el botón); como el icono ya sustituye el contenido, aquí basta con repetir el propio nombre.
 const TOOLBAR_ENTRADA = [
-  "bold",
-  "italic",
+  { name: "bold", action: EasyMDE.toggleBold, className: "bold", title: "Negrita", icon: ICONO_NEGRITA },
+  { name: "italic", action: EasyMDE.toggleItalic, className: "italic", title: "Cursiva", icon: ICONO_CURSIVA },
   "heading-2",
   "heading-3",
   "|",
-  "quote",
-  "unordered-list",
-  "ordered-list",
+  { name: "quote", action: EasyMDE.toggleBlockquote, className: "quote", title: "Cita", icon: ICONO_CITA },
+  {
+    name: "unordered-list",
+    action: EasyMDE.toggleUnorderedList,
+    className: "unordered-list",
+    title: "Lista",
+    icon: ICONO_LISTA,
+  },
+  {
+    name: "ordered-list",
+    action: EasyMDE.toggleOrderedList,
+    className: "ordered-list",
+    title: "Lista numerada",
+    icon: ICONO_LISTA_NUM,
+  },
   "|",
-  "link",
-  "image",
+  { name: "link", action: EasyMDE.drawLink, className: "link", title: "Enlace", icon: ICONO_ENLACE },
+  {
+    name: "upload-image",
+    action: EasyMDE.drawUploadedImage,
+    className: "upload-image",
+    title: "Subir una foto desde el ordenador",
+    icon: ICONO_FOTO,
+  },
   "|",
-  "preview",
-  "guide",
+  {
+    name: "preview",
+    action: EasyMDE.togglePreview,
+    className: "preview",
+    title: "Ver cómo quedará",
+    icon: ICONO_VER,
+    noDisable: true,
+  },
+  {
+    name: "guide",
+    action: "https://www.markdownguide.org/basic-syntax/",
+    className: "guide",
+    title: "Ayuda con el formato del texto",
+    icon: ICONO_AYUDA,
+    noDisable: true,
+  },
 ] as const;
 
 // uploadImage hace que el botón de imagen (y arrastrar o pegar una foto) suba el archivo de
@@ -1026,7 +1083,7 @@ $("#entrada-quitar-portada").addEventListener("click", () => {
 // Modificar
 function abrirEdicionEntrada(e: Entrada) {
   editandoEntrada = { original: e, portada: e.datos.portada ?? "" };
-  imagenesPendientesTexto = [];
+  limpiarImagenesPendientesTexto();
   $("#entrada-titulo-visor").textContent = e.datos.titulo;
   $<HTMLInputElement>("#entrada-titulo").value = e.datos.titulo;
   $<HTMLInputElement>("#entrada-titulo-en").value = e.datos.tituloEn ?? "";
@@ -1062,6 +1119,7 @@ function hayCambiosEntrada() {
 function salirEdicionEntrada() {
   if (hayCambiosEntrada() && !window.confirm("Hay cambios sin guardar. ¿Salir igualmente?")) return;
   editandoEntrada = null;
+  limpiarImagenesPendientesTexto();
   estado("");
   mostrarVista("blog");
 }
@@ -1120,6 +1178,7 @@ $("#entrada-guardar").addEventListener("click", async () => {
   if (ok) {
     entradas = ordenarEntradas(entradas.map((e) => (e.slug === original.slug ? { slug, datos } : e)));
     editandoEntrada = null;
+    limpiarImagenesPendientesTexto();
     pintarEntradas();
     mostrarVista("blog");
     estado(MSG_PUBLICADO, "ok");

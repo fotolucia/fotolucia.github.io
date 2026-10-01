@@ -13,51 +13,140 @@ import { SITE } from "../site";
     </p>
   </section>
 
-  <!-- El bloque de Google va FUERA del <form>: así nada de lo que pinte Google (o cualquier
-       botón sin type="button") puede disparar un envío del formulario por accidente. El correo
-       verificado se añade a mano al enviar (ver el script, más abajo). -->
-  <div class="campo">
-    <span data-en="Email (verified with Google)">Correo (verificado con Google)</span>
-    <div id="google-pendiente">
-      <div id="google-boton"></div>
-      <p class="ayuda" data-en="Sign in with Google so I can send you a reply — this way I know it's a real address.">
-        Inicia sesión con Google para poder enviarte una respuesta: así sé que el correo es real.
-      </p>
+  <div class="disposicion">
+    <div class="col-formulario">
+      <!-- El bloque de Google va FUERA del <form>: así nada de lo que pinte Google (o cualquier
+           botón sin type="button") puede disparar un envío del formulario por accidente. El correo
+           verificado se añade a mano al enviar (ver el script, más abajo). -->
+      <div class="campo">
+        <span data-en="Email (verified with Google)">Correo (verificado con Google)</span>
+        <div id="google-pendiente">
+          <div id="google-boton"></div>
+          <p class="ayuda" data-en="Sign in with Google so I can send you a reply — this way I know it's a real address.">
+            Inicia sesión con Google para poder enviarte una respuesta: así sé que el correo es real.
+          </p>
+        </div>
+        <div id="google-hecho" class="google-hecho" hidden>
+          <p class="google-correo">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M4 12l5 5L20 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              ></path>
+            </svg>
+            <span id="google-correo-texto"></span>
+          </p>
+          <button type="button" class="enlace" id="google-cambiar" data-en="Change account">Cambiar de cuenta</button>
+        </div>
+      </div>
+
+      <form id="form-contacto" class="formulario" action={SITE.formulario} method="POST">
+        <!-- Trampa para robots: invisible para personas, los bots suelen rellenarlo igualmente -->
+        <label class="trampa" aria-hidden="true">
+          No rellenar este campo
+          <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" />
+        </label>
+
+        <label class="campo">
+          <span data-en="Name">Nombre</span>
+          <input type="text" name="name" autocomplete="name" required />
+        </label>
+        <label class="campo">
+          <span data-en="Message">Mensaje</span>
+          <textarea name="message" rows="6" required></textarea>
+        </label>
+
+        <p class="estado" id="estado-contacto" role="status"></p>
+        <button type="submit" class="boton" data-en="Send">Enviar</button>
+      </form>
     </div>
-    <div id="google-hecho" class="google-hecho" hidden>
-      <p class="google-correo">
-        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-          <path d="M4 12l5 5L20 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          ></path>
+
+    <aside class="col-redes">
+      <span class="etiqueta" data-en="Or find me here">O búscame aquí</span>
+      <a href={`https://www.instagram.com/${SITE.instagram}/`} target="_blank" rel="noopener" class="enlace-redes">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+          <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+          <circle cx="17.3" cy="6.7" r="1.1" fill="currentColor"></circle>
         </svg>
-        <span id="google-correo-texto"></span>
-      </p>
-      <button type="button" class="enlace" id="google-cambiar" data-en="Change account">Cambiar de cuenta</button>
-    </div>
+        <span>
+          <span class="nombre-red">Instagram</span>
+          <span class="dato-red">@{SITE.instagram}</span>
+        </span>
+      </a>
+      <a href={`mailto:${SITE.correo}`} class="enlace-redes">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+          <path d="m3.5 6 8.5 7 8.5-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+        </svg>
+        <span>
+          <span class="nombre-red" data-en="Email">Correo</span>
+          <span class="dato-red">{SITE.correo}</span>
+        </span>
+      </a>
+    </aside>
   </div>
-
-  <form id="form-contacto" class="formulario" action={SITE.formulario} method="POST">
-    <!-- Trampa para robots: invisible para personas, los bots suelen rellenarlo igualmente -->
-    <label class="trampa" aria-hidden="true">
-      No rellenar este campo
-      <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" />
-    </label>
-
-    <label class="campo">
-      <span data-en="Name">Nombre</span>
-      <input type="text" name="name" autocomplete="name" required />
-    </label>
-    <label class="campo">
-      <span data-en="Message">Mensaje</span>
-      <textarea name="message" rows="6" required></textarea>
-    </label>
-
-    <p class="estado" id="estado-contacto" role="status"></p>
-    <button type="submit" class="boton" data-en="Send">Enviar</button>
-  </form>
 </Base>
 
 <style>
+  .disposicion {
+    display: grid;
+    grid-template-columns: minmax(0, 520px) 220px;
+    gap: 64px;
+    align-items: start;
+  }
+
+  @media (max-width: 760px) {
+    .disposicion {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+  }
+
+  .col-redes {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 28px 0 0 40px;
+    border-left: 1px solid var(--linea);
+  }
+
+  @media (max-width: 760px) {
+    .col-redes {
+      padding: 28px 0 0;
+      border-left: 0;
+      border-top: 1px solid var(--linea);
+    }
+  }
+
+  .enlace-redes {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+  }
+
+  .enlace-redes span {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nombre-red {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--suave);
+  }
+
+  .dato-red {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    transition: text-decoration-color 0.2s;
+  }
+
+  .enlace-redes:hover .dato-red {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
   .formulario {
     max-width: 520px;
     margin-top: 22px;
