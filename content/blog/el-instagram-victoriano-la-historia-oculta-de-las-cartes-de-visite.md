@@ -3,7 +3,7 @@ titulo: "El Instagram victoriano: la historia oculta de las cartes de visite"
 fecha: "2026-09-29T10:00:00.000Z"
 tituloEn: "Victorian Instagram: The Hidden History of Letters to Visit"
 portada: "/uploads/blog/ngc-39161-thumbnail-frame-mumj78c2150.jpg"
-orden: 4
+orden: 1
 ---
 
 Hay objetos del pasado que guardan historias dignas de una novela: secretos victorianos ocultos en cartas selladas con lacre, retratos en miniatura con compartimentos para mechones de pelo de amantes lejanos o talismanes misteriosos envueltos en intriga. Las cartes de visite son el ejemplo perfecto. Recordé este término recientemente al leer Hija de la venganza de Michael McDowell, donde estas pequeñas fotografías funcionan como una pieza clave de la trama. Pero más allá de la ficción, la historia real de estas tarjetas decimonónicas es fascinante.

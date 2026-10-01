@@ -1,8 +1,9 @@
 ---
-titulo: Tres días en Islandia con una sola lente
-fecha: 2026-09-10T10:00:00.000Z
-portada: /uploads/blog/islandia.jpg
-resumen: Me propuse viajar ligera y llevar solo un 35 mm. Esto es lo que aprendí.
+titulo: "Tres días en Islandia con una sola lente"
+fecha: "2026-09-10T10:00:00.000Z"
+portada: "/uploads/blog/islandia.jpg"
+resumen: "Me propuse viajar ligera y llevar solo un 35 mm. Esto es lo que aprendí."
+orden: 2
 ---
 
 Viajar con una sola lente te obliga a moverte. Si quieres acercarte, caminas; si quieres más aire, das unos pasos atrás. Al principio me parecía una limitación y acabó siendo lo mejor del viaje.

@@ -3,6 +3,7 @@ titulo: "Por qué sigo usando carrete"
 fecha: "2026-08-22T10:00:00.000Z"
 portada: "/uploads/blog/camara.jpg"
 resumen: "Treinta y seis fotos, ni una más. Pensar antes de disparar cambia la forma de mirar."
+orden: 3
 ---
 
 Tengo una cámara analógica de mi abuelo y la saco cada vez que quiero ir más despacio.
