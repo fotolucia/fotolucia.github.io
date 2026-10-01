@@ -69,6 +69,10 @@ const htmlEn = cuerpoEn ? await marked.parse(cuerpoEn) : "";
     margin: 0 auto;
     font-size: 1.08rem;
     line-height: 1.85;
+  }
+
+  /* Solo se justifican los párrafos que se marquen como tal desde el botón del editor */
+  .texto :global(.justificado) {
     text-align: justify;
     hyphens: auto;
   }

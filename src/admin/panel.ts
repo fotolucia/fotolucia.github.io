@@ -135,14 +135,19 @@ function limpiarImagenesPendientesTexto() {
   imagenesPendientesTexto = [];
 }
 
-async function subirImagenEditor(archivo: File, onExito: (url: string) => void, onError: (msg: string) => void) {
+// Nota: no se usa el "onExito" que da EasyMDE, porque él mismo decide si lo insertado es una
+// foto o un enlace mirando la extensión del archivo en la URL (p. ej. ".jpg") — y una URL
+// "blob:" no tiene extensión, así que lo metía como enlace («[nombre](url)») en vez de como foto
+// («![nombre](url)»). Para evitarlo, aquí se escribe el Markdown de la foto directamente.
+async function subirImagenEditor(this: EasyMDE, archivo: File, _onExito: (url: string) => void, onError: (msg: string) => void) {
   try {
     const nueva = await prepararImagen(archivo);
     const nombre = `${slugify(archivo.name.replace(/\.[^.]+$/, "")) || "foto"}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}.jpg`;
     const ruta = `/uploads/blog/${nombre}`;
     const urlProvisional = URL.createObjectURL(archivo);
     imagenesPendientesTexto.push({ urlProvisional, ruta, base64: nueva.base64 });
-    onExito(urlProvisional); // se ve al momento; se cambia por la ruta final al guardar
+    this.codemirror.replaceSelection(`![](${urlProvisional})`);
+    this.codemirror.focus();
   } catch {
     onError("No se ha podido leer esa imagen.");
   }
@@ -942,12 +947,53 @@ const ICONO_ENLACE = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none
 const ICONO_FOTO = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="1.5"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5.5-5.5L8 18"/></svg>`;
 const ICONO_VER = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>`;
 const ICONO_AYUDA = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7" stroke-linecap="round"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></svg>`;
+const ICONO_JUSTIFICAR = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="11" x2="21" y2="11"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="3" y1="21" x2="21" y2="21"/></svg>`;
+
+// Markdown no tiene una forma propia de marcar un párrafo como «justificado»: aquí se envuelve
+// con un bloque de HTML y una clase (".justificado") que el estilo de la propia entrada sabe
+// interpretar. Pulsarlo otra vez quita la marca.
+// Importante: dentro de un párrafo ya justificado, el Markdown (negrita, cursiva, enlaces,
+// fotos) deja de interpretarse y se ve tal cual se escribió (p. ej. "**así**" en vez de "así" en
+// negrita) — es una limitación real de mezclar HTML y Markdown. Por eso solo se debe justificar
+// texto corrido, sin nada de formato ni fotos dentro; si un párrafo necesita negrita, un enlace o
+// una foto, mejor dejarlo sin justificar (o aparte, en su propia línea).
+function alternarJustificado(editor: EasyMDE) {
+  const cm = editor.codemirror;
+  // La justificación es cosa de todo el párrafo, así que siempre se coge la línea entera
+  // (o todas las líneas tocadas, si hay varias seleccionadas), aunque solo haya un cursor
+  // puesto en medio sin seleccionar nada.
+  const desde = { line: cm.getCursor("from").line, ch: 0 };
+  const lineaHasta = cm.getCursor("to").line;
+  const hasta = { line: lineaHasta, ch: cm.getLine(lineaHasta).length };
+
+  // ¿El párrafo ya está envuelto en un bloque "justificado"? Se mira la línea justo antes y
+  // justo después, no hace falta que estén seleccionadas para poder quitarlo.
+  const lineaAntes = desde.line > 0 ? cm.getLine(desde.line - 1) : null;
+  const lineaDespues = hasta.line < cm.lineCount() - 1 ? cm.getLine(hasta.line + 1) : null;
+  if (lineaAntes === '<div class="justificado">' && lineaDespues === "</div>") {
+    cm.replaceRange("", { line: hasta.line, ch: hasta.ch }, { line: hasta.line + 1, ch: lineaDespues.length });
+    cm.replaceRange("", { line: desde.line - 1, ch: 0 }, { line: desde.line, ch: 0 });
+    cm.focus();
+    return;
+  }
+
+  const texto = cm.getRange(desde, hasta);
+  cm.replaceRange(`<div class="justificado">\n${texto}\n</div>`, desde, hasta);
+  cm.focus();
+}
 
 // Nota: a EasyMDE hay que darle siempre un className que no esté vacío (si no, falla al crear
 // el botón); como el icono ya sustituye el contenido, aquí basta con repetir el propio nombre.
 const TOOLBAR_ENTRADA = [
   { name: "bold", action: EasyMDE.toggleBold, className: "bold", title: "Negrita", icon: ICONO_NEGRITA },
   { name: "italic", action: EasyMDE.toggleItalic, className: "italic", title: "Cursiva", icon: ICONO_CURSIVA },
+  {
+    name: "justificar",
+    action: alternarJustificado,
+    className: "justificar",
+    title: "Justificar el párrafo (solo texto normal, sin negrita, enlaces ni fotos dentro)",
+    icon: ICONO_JUSTIFICAR,
+  },
   "heading-2",
   "heading-3",
   "|",

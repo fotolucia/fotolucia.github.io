@@ -17,9 +17,11 @@ const categorias = await categoriasOrdenadas();
               loading={i < 2 ? "eager" : "lazy"}
             />
           )}
+          <div class="superpuesto">
+            <span class="nombre-categoria" data-en={c.data.tituloEn || c.data.titulo}>{c.data.titulo}</span>
+          </div>
         </div>
         <div class="texto">
-          <h2 data-en={c.data.tituloEn || c.data.titulo}>{c.data.titulo}</h2>
           <span class="etiqueta" data-en={`${c.data.fotos.length} ${c.data.fotos.length === 1 ? "photo" : "photos"}`}>{c.data.fotos.length} fotos</span>
         </div>
       </a>
@@ -46,6 +48,7 @@ const categorias = await categoriasOrdenadas();
   }
 
   .marco {
+    position: relative;
     aspect-ratio: 4 / 5;
     overflow: hidden;
     background: var(--linea);
@@ -58,20 +61,52 @@ const categorias = await categoriasOrdenadas();
     transition: transform 0.8s ease, filter 0.5s ease;
   }
 
-  .categoria:hover img {
+  .categoria:hover img,
+  .categoria:focus-visible img {
     transform: scale(1.03);
-    filter: brightness(0.92);
+    filter: brightness(0.6);
+  }
+
+  /* Nombre de la categoría centrado encima de la foto, solo visible al pasar el ratón */
+  .superpuesto {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .nombre-categoria {
+    font-family: var(--serif);
+    font-size: 1.9rem;
+    color: #f6f1e9;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .categoria:hover .nombre-categoria,
+  .categoria:focus-visible .nombre-categoria {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* En pantallas táctiles no hay un "pasar el ratón" fiable: se deja siempre visible */
+  @media (hover: none) {
+    .marco img {
+      filter: brightness(0.6);
+    }
+    .nombre-categoria {
+      opacity: 1;
+      transform: none;
+    }
   }
 
   .texto {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
+    justify-content: flex-end;
     margin-top: 16px;
-  }
-
-  .texto h2 {
-    font-size: 1.7rem;
   }
 </style>
