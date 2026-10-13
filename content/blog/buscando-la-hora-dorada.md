@@ -3,6 +3,7 @@ titulo: "Buscando la hora dorada"
 fecha: "2026-07-30T10:00:00.000Z"
 portada: "/uploads/blog/luz.jpg"
 resumen: "Unos consejos sencillos para aprovechar la luz del atardecer en la ciudad."
+oculta: true
 orden: 4
 ---
 
