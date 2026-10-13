@@ -3,6 +3,7 @@ titulo: "Tres días en Islandia con una sola lente"
 fecha: "2026-09-10T10:00:00.000Z"
 portada: "/uploads/blog/islandia.jpg"
 resumen: "Me propuse viajar ligera y llevar solo un 35 mm. Esto es lo que aprendí."
+oculta: true
 orden: 2
 ---
 
