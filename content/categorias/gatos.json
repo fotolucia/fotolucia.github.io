@@ -1,0 +1,17 @@
+{
+  "titulo": "Gatos",
+  "descripcion": "",
+  "portada": "/uploads/animales/dsc-0373-mvgxzdpr0c7.jpg",
+  "orden": 1,
+  "fotos": [
+    {
+      "imagen": "/uploads/animales/dsc-0373-mvgxzdpr0c7.jpg",
+      "titulo": "Sintra",
+      "pie": "",
+      "tituloEn": "Sintra"
+    }
+  ],
+  "tituloEn": "Cats",
+  "descripcionEn": "",
+  "oculta": false
+}
