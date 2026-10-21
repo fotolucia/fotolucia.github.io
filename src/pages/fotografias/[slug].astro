@@ -36,6 +36,7 @@ const fotos = todasLasFotos.filter((f) => !f.oculta);
               alt={f.titulo ?? ""}
               data-en-alt={f.tituloEn || f.titulo || ""}
               loading={i < 4 ? "eager" : "lazy"}
+              style={f.posicion ? `object-position: ${f.posicion}` : undefined}
             />
           </button>
           {(f.titulo || f.pie) && (

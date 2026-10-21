@@ -10,6 +10,7 @@ type Foto = {
   tituloEn?: string | null;
   pie?: string | null;
   oculta?: boolean | null;
+  posicion?: string | null; // "50% 50%" (estilo object-position): qué parte centrar al recortar
 };
 type Categoria = {
   slug: string;
@@ -574,7 +575,12 @@ function pintarFotos() {
           const etiquetas = [i === primeraVisible ? "Portada" : "", f.nueva ? "Nueva" : ""].filter(Boolean);
           return `<li class="${oculta ? "foto-oculta" : ""}">
             <button type="button" class="miniatura" data-nombrar="${i}" title="Pulsa para ponerle nombre">
-              <img src="${escapar(f.nueva?.vista ?? urlImagen(f.imagen))}" alt="${escapar(f.titulo ?? "")}" loading="lazy" />
+              <img
+                src="${escapar(f.nueva?.vista ?? urlImagen(f.imagen))}"
+                alt="${escapar(f.titulo ?? "")}"
+                loading="lazy"
+                style="object-position: ${f.posicion || "50% 50%"}"
+              />
             </button>
             <span class="etiquetas">${etiquetas.map((e) => `<span>${e}</span>`).join("")}</span>
             <button type="button" class="ojo" data-ojo="${i}" aria-label="${oculta ? "Mostrar foto" : "Ocultar foto"}" title="${oculta ? "Mostrar foto" : "Ocultar foto"}">
@@ -624,14 +630,38 @@ Sortable.create($("#editar-fotos"), {
   },
 });
 
-// Pulsar una foto: ponerle nombre (si se deja vacío, se queda sin nombre)
+// Pulsar una foto: ponerle nombre y elegir qué parte centrar al recortarla (si se deja vacío
+// el nombre, se queda sin nombre; si no se toca el centrado, se recorta por el centro, como antes)
 const dialogoFoto = $<HTMLDialogElement>("#dialogo-foto");
+const marcoPosicion = $("#foto-marco-posicion");
+const puntoPosicion = $("#foto-punto");
 let fotoNombrando = -1;
+let posicionElegida = "50% 50%";
+
+function pintarPosicion() {
+  const [x, y] = posicionElegida.split(" ");
+  puntoPosicion.style.left = x;
+  puntoPosicion.style.top = y;
+  $<HTMLImageElement>("#foto-previa").style.objectPosition = posicionElegida;
+}
+
+marcoPosicion.addEventListener("click", (e) => {
+  const r = marcoPosicion.getBoundingClientRect();
+  const x = Math.round((((e as MouseEvent).clientX - r.left) / r.width) * 100);
+  const y = Math.round((((e as MouseEvent).clientY - r.top) / r.height) * 100);
+  posicionElegida = `${Math.min(100, Math.max(0, x))}% ${Math.min(100, Math.max(0, y))}%`;
+  pintarPosicion();
+});
+
 function nombrarFoto(i: number) {
   if (!editando) return;
   const f = editando.fotos[i];
   fotoNombrando = i;
-  $<HTMLImageElement>("#foto-vista").src = f.nueva?.vista ?? urlImagen(f.imagen);
+  const src = f.nueva?.vista ?? urlImagen(f.imagen);
+  $<HTMLImageElement>("#foto-vista").src = src;
+  $<HTMLImageElement>("#foto-previa").src = src;
+  posicionElegida = f.posicion || "50% 50%";
+  pintarPosicion();
   dialogoFoto.querySelector<HTMLInputElement>("input[name=titulo]")!.value = f.titulo ?? "";
   dialogoFoto.querySelector<HTMLInputElement>("input[name=tituloEn]")!.value = f.tituloEn ?? "";
   dialogoFoto.showModal();
@@ -642,6 +672,7 @@ dialogoFoto.querySelector("form")!.addEventListener("submit", (e) => {
   if (editando && editando.fotos[fotoNombrando]) {
     editando.fotos[fotoNombrando].titulo = dialogoFoto.querySelector<HTMLInputElement>("input[name=titulo]")!.value.trim();
     editando.fotos[fotoNombrando].tituloEn = dialogoFoto.querySelector<HTMLInputElement>("input[name=tituloEn]")!.value.trim();
+    editando.fotos[fotoNombrando].posicion = posicionElegida === "50% 50%" ? "" : posicionElegida;
     pintarFotos();
   }
   dialogoFoto.close();
@@ -680,7 +711,7 @@ $("#editar-cancelar").addEventListener("click", salirEdicion);
 function hayCambios() {
   if (!editando) return false;
   const limpiar = (fotos: FotoEdicion[]) =>
-    JSON.stringify(fotos.map((f) => [f.imagen, f.titulo ?? "", f.tituloEn ?? "", !!f.oculta]));
+    JSON.stringify(fotos.map((f) => [f.imagen, f.titulo ?? "", f.tituloEn ?? "", !!f.oculta, f.posicion ?? ""]));
   return (
     $<HTMLInputElement>("#editar-nombre").value.trim() !== editando.original.datos.titulo ||
     $<HTMLInputElement>("#editar-nombre-en").value.trim() !== (editando.original.datos.tituloEn ?? "") ||

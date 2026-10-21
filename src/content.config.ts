@@ -20,6 +20,7 @@ const categorias = defineCollection({
           tituloEn: z.string().nullish(),
           pie: z.string().nullish(),
           oculta: z.boolean().nullish(),
+          posicion: z.string().nullish(),
         })
       )
       .nullish()
